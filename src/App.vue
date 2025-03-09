@@ -1,10 +1,9 @@
 <template>
     <div>
-      <h1>{{ quiz.title }}</h1>
-      <!-- bar de progrès -->
-      <div class="progress-bar">
 
-      </div>
+
+      <h1>{{ quiz.title }}</h1>
+
 
 
       <!-- question + choix -->
@@ -13,15 +12,20 @@
         <p>Question {{ currentQuestionIndex + 1 }}/{{ quiz.questions.length }}</p>
 
 
+        <!-- bar de progrès -->
+        <div class="progress-bar" style="margin-bottom: 15px">
+          <div class="bar" :style="{ width: `${(currentQuestionIndex / quiz.questions.length) * 100}%` }"></div>
+        </div>
+
         <!-- CHOIX REPONSE -->
-        <div class="choices">
+        <div class="choices" style="margin-bottom: 15px">
           <!-- choix valeur réponse -->
           <div
             v-for="(choice, index) in quiz.questions[currentQuestionIndex].choices"
             :key="index"
             class="choice"
           >
-            <input type="radio" :id="index" :name="currentQuestionIndex" />
+            <input type="radio" :value="choice" v-model="choicesAnswer"  :id="index" :name="currentQuestionIndex" />
             <label :for="index">{{ choice }}</label>
           </div>
         </div>
@@ -29,10 +33,19 @@
 
       <!-- Bouton validation si valeur pas vide et itération + 1 index -->
       <div>
+        <!-- clique ajout de la fonction aussi -->
         <button
-          @click="currentQuestionIndex.value++"
-        >Question suivante</button>
+          v-if="currentQuestionIndex < quiz.questions.length"
+          @click="nextQuestion();">
+          Question suivante
+        </button>
 
+        <!-- message de succès ou d'échec si toutes les questions sont répondues -->
+        <div v-if="currentQuestionIndex >= quiz.questions.length">
+          <h2>Quiz terminé!</h2>
+          <p>Votre score: {{ goodAnswer }}/{{ quiz.questions.length }}</p>
+          <p>{{ goodAnswer >= quiz.minimum_score ? quiz.success_message : quiz.failure_message }}</p>
+        </div>
 
       </div>
 
@@ -45,6 +58,9 @@
 
 import {ref} from "vue";
 
+const choicesAnswer = ref("");
+const goodAnswer = ref(0);
+const progressbarCount = ref(0);
 const currentQuestionIndex = ref(0);
 
 const quiz = {
@@ -95,7 +111,34 @@ const quiz = {
     }
   ]
 };
+
+
+function nextQuestion() {
+  // Vérifier si la réponse est correcte
+  if (choicesAnswer.value === quiz.questions[currentQuestionIndex.value].correct_answer) {
+    goodAnswer.value++;
+  }
+
+  // Passer à la question suivante
+  currentQuestionIndex.value++;
+  progressbarCount.value++;
+
+  // Réinitialiser la sélection pour la prochaine question
+  choicesAnswer.value = "";
+}
 </script>
 
 <style scoped>
+.progress-bar {
+  width: 20%;
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+}
+
+.bar {
+  height: 100%;
+  background-color: #4c74af;
+  transition: width 0.3s ease;
+}
 </style>
